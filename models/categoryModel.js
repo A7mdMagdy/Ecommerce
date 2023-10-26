@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const AppError = require('../utils/AppError');
 
 const categorySchema = new mongoose.Schema({
     name: {
@@ -13,6 +14,12 @@ const categorySchema = new mongoose.Schema({
         trim: true,
         required: [true, 'The category must have a description'],
     },
+    products: [
+        {
+            type: mongoose.Schema.ObjectId,
+            ref: 'Product'
+        }
+    ],
     createdAt: {
         type: Date,
         default: Date.now()
@@ -25,6 +32,21 @@ const categorySchema = new mongoose.Schema({
 
 categorySchema.pre('findOneAndUpdate', function (next) {
     this._update.updatedAt = Date.now();
+
+    next();
+});
+
+categorySchema.pre('findOneAndDelete', function (next) {
+    if (this.products.length > 0) {
+        return next(new AppError('This category contains a products', 400));
+    }
+
+    next();
+});
+
+categorySchema.pre(/^findOne/, function (next) {
+    this.populate('products');
+
     next();
 });
 
