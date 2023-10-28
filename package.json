@@ -19,6 +19,7 @@
     "express-session": "^1.17.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.3",
+    "nodemailer": "^6.9.7",
     "passport": "^0.6.0",
     "passport-google-oauth2": "^0.2.0",
     "validator": "^13.11.0"
