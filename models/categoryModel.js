@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const AppError = require('../utils/AppError');
 
 const categorySchema = new mongoose.Schema({
     name: {
@@ -10,7 +9,6 @@ const categorySchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        minlength: [8, 'The description must be at least 8 characters'],
         trim: true,
         required: [true, 'The category must have a description'],
     },
@@ -30,22 +28,14 @@ const categorySchema = new mongoose.Schema({
     },
 });
 
+// categorySchema.pre(/^findOne/, function (next) {
+//     this.populate('products');
+
+//     next();
+// });
+
 categorySchema.pre('findOneAndUpdate', function (next) {
     this._update.updatedAt = Date.now();
-
-    next();
-});
-
-categorySchema.pre('findOneAndDelete', function (next) {
-    if (this.products.length > 0) {
-        return next(new AppError('This category contains a products', 400));
-    }
-
-    next();
-});
-
-categorySchema.pre(/^findOne/, function (next) {
-    this.populate('products');
 
     next();
 });

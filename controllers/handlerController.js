@@ -1,6 +1,16 @@
 const catchAsync = require('./../utils/catchAsync');
-const AppError = require('./../utils/appError');
+const AppError = require('../utils/appError');
 const APIFeatures = require('./../utils/apiFeatures');
+
+exports.createOne = Model =>
+  catchAsync(async (req, res, next) => {
+    const newDoc = await Model.create(req.body);
+
+    res.status(201).json({
+      status: 'success',
+      data: newDoc
+    });
+  });
 
 exports.deleteOne = Model =>
   catchAsync(async (req, res, next) => {
@@ -66,7 +76,7 @@ exports.getAll = Model =>
       .limitFields()
       .paginate();
     // const doc = await features.query.explain();
-    console.log(features)
+    console.log(features);
     const doc = await features.query;
 
     // SEND RESPONSE
