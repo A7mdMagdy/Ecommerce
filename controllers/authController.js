@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('./../models/userModel');
 const { promisify } = require('util');
 const catchAsync = require('../utils/catchAsync')
@@ -133,13 +134,12 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   // 3) Send it to user's email
-  const resetURL = `${req.protocol}://${req.get(
-    'host'
-  )}/api/users/resetPassword/${resetToken}`;
+  const resetURL = `${req.protocol}://${req.get('host')}/api/users/resetPassword/${resetToken}`;
 
   const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
 
   try {
+    console.log(user.email)
     await sendEmail({
       email: user.email,
       subject: 'Your password reset token (valid for 10 min)',
@@ -151,8 +151,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       message: 'Token sent to email!'
     });
   } catch (err) {
+    console.log(err.message)
     user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
+    user.passwordTokenExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
     return next(
@@ -168,12 +169,12 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     .createHash('sha256')
     .update(req.params.token)
     .digest('hex');
-
   const user = await User.findOne({
     passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() }
   });
 
+  console.log(user)
   // 2) If token has not expired, and there is user, set the new password
   if (!user) {
     return next(new AppError('Token is invalid or has expired', 400));
@@ -181,7 +182,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
+  user.passwordTokenExpires = undefined;
   await user.save();
 
   // 3) Update changedPasswordAt property for the user
